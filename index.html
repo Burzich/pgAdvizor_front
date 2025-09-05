@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pgAdvisor</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="icon" href="slon.png" type="image/x-icon"> <!--src: https://icons8.com/icon/102477/elephant-->
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>pgAdvisor</h1>
+                <div class="header-buttons">
+                    <button class="header-button db-button" id="dbButton" title="Параметры БД">
+                        <i class="bi bi-database"></i>
+                    </button>
+                    <button class="header-button download-button" id="downloadButton" title="Скачать">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Модальное окно с параметрами БД -->
+        <div id="dbModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Параметры БД</h2>
+                    <button class="modal-close" id="modalClose">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table id="dbParamsTable">
+                            <thead>
+                                <tr>
+                                    <th>Имя</th>
+                                    <th>Значение</th>
+                                    <th>Рекомендуемое (холодная)</th>
+                                    <th>Рекомендуемое (горячая)</th>
+                                    <th>Описание</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dbParamsBody">
+                                <!-- Данные будут добавлены через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <main>
+            <!-- Форма ввода SQL-запроса -->
+            <section class="input-section">
+                <h2>Введите SQL-запрос</h2>
+                <textarea id="sqlQuery" placeholder="Введите ваш SQL-запрос...">SELECT * FROM users_table</textarea>
+                
+                <h3>Опции:</h3>
+                <div class="analyzers">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="analyzer1" checked>
+                        <span class="checkmark"></span>
+                        STATIC
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="analyzer2" checked>
+                        <span class="checkmark"></span>
+                        LLM
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="option1" unchecked>
+                        <span class="checkmark"></span>
+                        Ответ БД
+                    </label>
+                </div>
+                
+                <button id="checkButton" class="check-button">Проверить</button>
+            </section>
+            
+            <!-- Результаты анализа -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <h2>Результаты анализа</h2>
+                
+                <div class="result-item">
+                    <label>SQL-запрос:</label>
+                    <div class="query-display" id="queryDisplay"></div>
+                </div>
+                
+                <div class="result-item">
+                    <label>Опции:</label>
+                    <div class="analyzers-display" id="analyzersDisplay"></div>
+                </div>
+
+                <!-- Результаты STATIC анализа -->
+                <div id="staticResults" class="analyzer-results" style="display: none;">
+                    <h3>STATIC</h3>
+                    <div class="static-content">
+                        <p>Анализ синтаксиса SQL запроса...</p>
+                        <p>Проверка корректности структуры...</p>
+                        <p>Валидация ключевых слов...</p>
+                    </div>
+                </div>
+
+                <!-- Результаты LLM анализа -->
+                <div id="llmResults" class="analyzer-results" style="display: none;">
+                    <h3>LLM</h3>
+                    <div class="llm-content">
+                        <p>AI анализ запроса...</p>
+                        <p>Рекомендации по оптимизации...</p>
+                        <p>Анализ потенциальных проблем...</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Ответ базы данных -->
+            <section id="databaseSection" class="database-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Ответ базы данных</h2>
+                </div>
+                <div class="table-footer" id="tableFooter"></div>
+                <div class="section-content" id="databaseContent">
+                    <div class="table-container">
+                        <table id="databaseTable">
+                            <thead id="tableHead">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Имя</th>
+                                    <th>Email</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Данные будут добавлены через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Стрелочка сворачивания по центру после вывода БД -->
+                <div class="collapse-arrow-container">
+                    <button class="collapse-button" id="collapseButton">
+                        <i class="bi bi-chevron-up arrow-icon"></i>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Debichы. Все права защищены.</p>
+        </footer>
+    </div>
+    
+    <script>
+        window.API_BASE_URL = "{{API_BASE_URL}}";
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

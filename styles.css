@@ -1,0 +1,22 @@
+/* Основной файл стилей - импорт всех компонентов */
+
+/* Базовые стили */
+@import url('components/base.css');
+
+/* Стили для заголовка и кнопок */
+@import url('components/header.css');
+
+/* Стили для модального окна */
+@import url('components/modal.css');
+
+/* Стили для форм, полей ввода и кнопок */
+@import url('components/forms.css');
+
+/* Стили для результатов анализа */
+@import url('components/results.css');
+
+/* Стили для таблиц */
+@import url('components/tables.css');
+
+/* Адаптивные стили */
+@import url('components/responsive.css');

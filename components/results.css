@@ -1,0 +1,72 @@
+/* Стили для результатов анализа */
+
+/* Результаты анализа */
+.result-item {
+    margin-bottom: 20px;
+}
+
+.result-item label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #000;
+}
+
+.query-display {
+    background: #f7f7f7;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #000;
+    word-break: break-all;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+.analyzers-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.analyzer-tag {
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Секции результатов анализаторов */
+.analyzer-results {
+    margin-top: 25px;
+    padding: 20px;
+    border: none;
+    border-radius: 8px;
+    background: #f7f7f7;
+}
+
+.analyzer-results h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #000;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+}
+
+.analyzer-results p {
+    margin: 8px 0;
+    color: #333;
+    line-height: 1.5;
+}
+
+.static-content {
+    color: #0066cc;
+}
+
+.llm-content {
+    color: #cc6600;
+}

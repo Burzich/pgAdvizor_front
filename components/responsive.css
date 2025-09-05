@@ -1,0 +1,141 @@
+/* Адаптивные стили */
+
+/* Адаптивность для модального окна и таблицы параметров БД */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    section {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .analyzers {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .check-button {
+        max-width: 100%;
+    }
+    
+    .analyzers-display {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .analyzer-tag {
+        text-align: center;
+    }
+    
+    table {
+        min-width: 400px;
+    }
+    
+    th, td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    /* Адаптивность для модального окна */
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        max-height: 85vh;
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .header-buttons {
+        gap: 10px;
+    }
+    
+    #dbParamsTable {
+        font-size: 13px;
+    }
+    
+    #dbParamsTable th,
+    #dbParamsTable td {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+    
+    section {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+    }
+    
+    textarea {
+        min-height: 100px;
+        font-size: 13px;
+    }
+    
+    table {
+        min-width: 300px;
+    }
+    
+    th, td {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    /* Адаптивность для модального окна */
+    .modal-content {
+        width: 98%;
+        margin: 5% auto;
+    }
+    
+    .modal-header {
+        padding: 15px;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    .header-button {
+        padding: 10px 12px;
+    }
+    
+    .header-button i {
+        font-size: 16px;
+    }
+    
+    #dbParamsTable {
+        font-size: 12px;
+    }
+    
+    #dbParamsTable th,
+    #dbParamsTable td {
+        padding: 6px 8px;
+    }
+}

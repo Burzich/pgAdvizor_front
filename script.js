@@ -1,0 +1,593 @@
+const API_BASE_URL = window.API_BASE_URL;
+
+// Основной класс для управления SQL анализатором
+class SQLAnalyzer {
+    constructor() {
+        this.initializeElements();
+        this.bindEvents();
+        this.mockData = this.getMockData();
+    }
+
+    // Инициализация DOM элементов
+    initializeElements() {
+        this.sqlQueryInput = document.getElementById('sqlQuery');
+        this.checkButton = document.getElementById('checkButton');
+        this.analyzer1 = document.getElementById('analyzer1');
+        this.analyzer2 = document.getElementById('analyzer2');
+        this.option1 = document.getElementById('option1')
+        this.resultsSection = document.getElementById('resultsSection');
+        this.databaseSection = document.getElementById('databaseSection');
+        this.queryDisplay = document.getElementById('queryDisplay');
+        this.analyzersDisplay = document.getElementById('analyzersDisplay');
+        this.tableBody = document.getElementById('tableBody');
+        this.tableFooter = document.getElementById('tableFooter');
+        this.collapseButton = document.getElementById('collapseButton');
+        this.databaseContent = document.getElementById('databaseContent');
+        
+        // Новые элементы для заголовка и модального окна
+        this.dbButton = document.getElementById('dbButton');
+        this.downloadButton = document.getElementById('downloadButton');
+        this.dbModal = document.getElementById('dbModal');
+        this.modalClose = document.getElementById('modalClose');
+        this.dbParamsBody = document.getElementById('dbParamsBody');
+
+        // События для галочек анализаторов
+        this.analyzer1.addEventListener('change', () => this.handleAnalyzer1Change());
+        this.analyzer2.addEventListener('change', () => this.handleAnalyzer2Change());
+    }
+
+    // Привязка событий
+    bindEvents() {
+        this.checkButton.addEventListener('click', () => this.handleCheck());
+        this.collapseButton.addEventListener('click', () => this.toggleDatabaseSection());
+        
+        // Новые события для кнопок заголовка
+        this.dbButton.addEventListener('click', () => this.openDbModal());
+        this.modalClose.addEventListener('click', () => this.closeDbModal());
+        this.downloadButton.addEventListener('click', () => this.handleDownload());
+        
+        // Закрытие модального окна при клике вне его
+        window.addEventListener('click', (event) => {
+            if (event.target === this.dbModal) {
+                this.closeDbModal();
+            }
+        });
+    }
+
+    // Переключение сворачивания/разворачивания секции БД
+    toggleDatabaseSection() {
+        const content = this.databaseContent;
+        const arrowIcon = this.collapseButton.querySelector('.arrow-icon');
+        
+        if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            arrowIcon.classList.add('collapsed');
+        } else {
+            content.classList.add('expanded');
+            arrowIcon.classList.remove('collapsed');
+        }
+    }
+
+    // Обработка изменения галочек анализаторов
+    handleAnalyzer1Change() {
+        // Проверяем, что хотя бы одна галочка включена
+        if (!this.analyzer1.checked && !this.analyzer2.checked) {
+            // Если обе галочки сняты, включаем первую
+            this.analyzer2.checked = true;
+        }
+    }
+
+    handleAnalyzer2Change() {
+        // Проверяем, что хотя бы одна галочка включена
+        if (!this.analyzer1.checked && !this.analyzer2.checked) {
+            // Если обе галочки сняты, включаем вторую
+            this.analyzer1.checked = true;
+        }
+    }
+
+    // Получение результатов анализа с сервера
+    async fetchQuerySuggestions(sqlQuery) {
+        const response = await fetch(`${API_BASE_URL}/api/suggestions/query?query=${encodeURIComponent(sqlQuery)}`);
+        if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
+        return await response.json();
+    }
+
+
+    // Отображение ответа базы данных
+    showDatabaseResponse() {
+        // Показываем секцию с ответом базы
+        this.databaseSection.style.display = 'block';
+        
+        // По умолчанию секция свернута
+        this.databaseContent.classList.remove('collapsed');
+        this.collapseButton.querySelector('.arrow-icon').classList.add('collapsed');
+        
+        // Заполняем таблицу данными
+        this.populateTable();
+        
+        // Прокручиваем к таблице
+        this.databaseSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Обработка нажатия кнопки "Проверить"
+    async handleCheck() {
+        try {
+            // Вырубаем всё
+            this.databaseSection.style.display = 'none';
+            this.resultsSection.style.display = 'none';
+
+            // Показываем индикатор загрузки
+            this.checkButton.textContent = 'Проверяем...';
+            this.checkButton.disabled = true;
+
+            // Получаем данные из формы
+            const formData = this.getFormData();
+
+            // Получаем результаты анализа с сервера
+            const suggestions = await this.fetchQuerySuggestions(formData.sqlQuery);
+            this.showResults(formData, suggestions);
+            
+            // Показываем ответ базы данных
+            if (formData.options.option1) {
+                this.showDatabaseResponse();
+            }
+            
+            // В реальном приложении здесь будет отправка POST-запроса на сервер
+            // await this.sendToServer(formData);
+            
+        } catch (error) {
+            console.error('Ошибка при проверке:', error);
+            alert('Произошла ошибка при проверке запроса');
+        } finally {
+            // Восстанавливаем кнопку
+            this.checkButton.textContent = 'Проверить';
+            this.checkButton.disabled = false;
+        }
+    }
+
+    // Получение данных из формы
+    getFormData() {
+        return {
+            sqlQuery: this.sqlQueryInput.value.trim(),
+            analyzers: {
+                analyzer1: this.analyzer1.checked,
+                analyzer2: this.analyzer2.checked
+            },
+            options: {
+                option1: this.option1.checked
+            }
+        };
+    }
+
+    // Отображение результатов анализа
+    showResults(formData, suggestions) {
+        this.resultsSection.style.display = 'block';
+    
+        this.queryDisplay.textContent = formData.sqlQuery || 'Запрос не введен';
+        this.analyzersDisplay.innerHTML = '';
+    
+        // Теги анализаторов
+        Object.entries(formData.analyzers).forEach(([key, enabled]) => {
+            if (enabled) {
+                const label = this[key].parentElement.textContent.trim();
+                const tag = document.createElement('span');
+                tag.className = 'analyzer-tag';
+                tag.textContent = label;
+                this.analyzersDisplay.appendChild(tag);
+            }
+        });
+    
+        // STATIC/LLM выводим на основе ответа сервера
+        const staticResults = document.getElementById('staticResults');
+        const llmResults = document.getElementById('llmResults');
+        const staticContent = document.querySelector('.static-content');
+        const llmContent = document.querySelector('.llm-content');
+    
+        staticContent.innerHTML = '';
+        llmContent.innerHTML = '';
+    
+        suggestions.forEach(s => {
+            const p = document.createElement('p');
+            p.textContent = `[${s.severity}] ${s.message} (${s.fix})`;
+            if (s.source === 'static-analyzer') {
+                staticResults.style.display = 'block';
+                staticContent.appendChild(p);
+            } else {
+                llmResults.style.display = 'block';
+                llmContent.appendChild(p);
+            }
+        });
+    
+        this.resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Показ результатов выбранных анализаторов
+    showAnalyzerResults(analyzers) {
+        const staticResults = document.getElementById('staticResults');
+        const llmResults = document.getElementById('llmResults');
+        
+        // Показываем результаты STATIC анализа
+        if (analyzers.analyzer1) {
+            staticResults.style.display = 'block';
+            this.populateStaticResults();
+        } else {
+            staticResults.style.display = 'none';
+        }
+        
+        // Показываем результаты LLM анализа
+        if (analyzers.analyzer2) {
+            llmResults.style.display = 'block';
+            this.populateLLMResults();
+        } else {
+            llmResults.style.display = 'none';
+        }
+    }
+
+    // Заполнение результатов STATIC анализа
+    populateStaticResults() {
+        const staticContent = document.querySelector('.static-content');
+        const staticResults = this.getStaticAnalysisResults();
+        
+        staticContent.innerHTML = '';
+        staticResults.forEach(result => {
+            const p = document.createElement('p');
+            p.textContent = result;
+            staticContent.appendChild(p);
+        });
+    }
+
+    // Заполнение результатов LLM анализа
+    populateLLMResults() {
+        const llmContent = document.querySelector('.llm-content');
+        const llmResults = this.getLLMAnalysisResults();
+        
+        llmContent.innerHTML = '';
+        llmResults.forEach(result => {
+            const p = document.createElement('p');
+            p.textContent = result;
+            llmContent.appendChild(p);
+        });
+    }
+
+    // Мок данные для STATIC анализа
+    getStaticAnalysisResults() {
+        return [
+            'Я того рот ебал эти запросы',
+            'Просто нахуй',
+            'Большую хуйню надо было постараться сделать',
+            'Знаешь что такое HAVING BY???',
+            'fkljdfjk;ldfjk;f'
+        ];
+    }
+
+    // Мок данные для LLM анализа
+    getLLMAnalysisResults() {
+        return [
+            'Ты прав, запрос хуйня. Но не переживай что сделал хуйню',
+            'Ща всё исправим',
+            'Пиши заявление на увольнение',
+            'Это всё явно не твоё',
+            'Но всё равно не переживай, я тебя заменю'
+        ];
+    }
+
+    // Заполнение таблицы данными
+    populateTable() {
+        this.tableBody.innerHTML = '';
+        
+        this.mockData.forEach(row => {
+            const tr = document.createElement('tr');
+            
+            tr.innerHTML = `
+                <td>${row.id}</td>
+                <td>${row.name}</td>
+                <td>${row.email}</td>
+                <td><span class="status-badge status-${row.status}">${row.status}</span></td>
+            `;
+            
+            this.tableBody.appendChild(tr);
+        });
+        
+        // Обновляем футер таблицы
+        this.tableFooter.textContent = `Найдено записей: ${this.mockData.length}`;
+    }
+
+    // Мок-данные для демонстрации
+    getMockData() {
+        return [
+            { id: 1, name: 'Иван Иванов', email: 'ivan@example.com', status: 'active' },
+            { id: 2, name: 'Мария Петрова', email: 'maria@example.com', status: 'inactive' },
+            { id: 3, name: 'Алексей Сидоров', email: 'alexey@example.com', status: 'active' },
+            { id: 4, name: 'Елена Козлова', email: 'elena@example.com', status: 'pending' }
+        ];
+    }
+
+    // Утилита для создания задержки
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ЗАГОТОВКА: Отправка данных на сервер
+    // В реальном приложении этот метод будет отправлять POST-запрос на сервер
+    async sendToServer(formData) {
+        try {
+            // Пример структуры запроса к серверу
+            const response = await fetch(`${API_BASE_URL}/api/analyze-sql`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Добавьте заголовки авторизации если необходимо
+                    // 'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    sqlQuery: formData.sqlQuery,
+                    analyzers: formData.analyzers,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            // Обработка ответа от сервера
+            // this.handleServerResponse(result);
+            
+            return result;
+            
+        } catch (error) {
+            console.error('Ошибка при отправке на сервер:', error);
+            throw error;
+        }
+    }
+
+    // ЗАГОТОВКА: Обработка ответа от сервера
+    // handleServerResponse(serverData) {
+    //     // Здесь будет логика обработки реального ответа от сервера
+    //     // Например:
+    //     // - Отображение результатов анализа
+    //     // - Показ ошибок SQL
+    //     // - Отображение рекомендаций по оптимизации
+    //     // - Показ статистики запроса
+    // }
+
+    // Открытие модального окна с параметрами БД
+    openDbModal() {
+        this.dbModal.style.display = 'block';
+        this.populateDbParamsTable();
+        document.body.style.overflow = 'hidden'; // Блокируем прокрутку страницы
+    }
+
+    // Закрытие модального окна
+    closeDbModal() {
+        this.dbModal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Восстанавливаем прокрутку страницы
+    }
+
+    // Обработка кнопки скачивания
+    handleDownload() {
+        try {
+            // Проверяем, есть ли результаты для скачивания
+            if (!this.resultsSection.style.display || this.resultsSection.style.display === 'none') {
+                alert('Сначала выполните анализ SQL-запроса');
+                return;
+            }
+
+            // Собираем данные для скачивания
+            const downloadData = this.prepareDownloadData();
+            
+            // Создаем и скачиваем файл
+            this.downloadTextFile(downloadData, 'sql_analysis_results.txt');
+            
+        } catch (error) {
+            console.error('Ошибка при скачивании:', error);
+            alert('Произошла ошибка при скачивании файла');
+        }
+    }
+
+    // Подготовка данных для скачивания
+    prepareDownloadData() {
+        const sqlQuery = this.sqlQueryInput.value.trim() || 'Запрос не введен';
+        const analyzer1Enabled = this.analyzer1.checked;
+        const analyzer2Enabled = this.analyzer2.checked;
+        
+        let content = 'РЕЗУЛЬТАТЫ АНАЛИЗА SQL-ЗАПРОСА\n';
+        content += '=====================================\n\n';
+        
+        // SQL-запрос
+        content += 'SQL-ЗАПРОС:\n';
+        content += '------------\n';
+        content += sqlQuery + '\n\n';
+        
+        // Включенные анализаторы
+        content += 'Опции:\n';
+        content += '------------------------\n';
+        if (analyzer1Enabled) content += '• STATIC\n';
+        if (analyzer2Enabled) content += '• LLM\n';
+        content += '\n';
+        
+        // Результаты STATIC анализа
+        if (analyzer1Enabled) {
+            content += 'STATIC:\n';
+            content += '---------------------------\n';
+            const staticResults = this.getStaticAnalysisResults();
+            staticResults.forEach(result => {
+                content += '• ' + result + '\n';
+            });
+            content += '\n';
+        }
+        
+        // Результаты LLM анализа
+        if (analyzer2Enabled) {
+            content += 'LLM:\n';
+            content += '------------------------\n';
+            const llmResults = this.getLLMAnalysisResults();
+            llmResults.forEach(result => {
+                content += '• ' + result + '\n';
+            });
+            content += '\n';
+        }
+        
+        // Временная метка
+        content += 'ВРЕМЯ АНАЛИЗА: ' + new Date().toLocaleString('ru-RU') + '\n';
+        
+        return content;
+    }
+
+    // Скачивание текстового файла
+    downloadTextFile(content, filename) {
+        // Создаем Blob с содержимым файла
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        
+        // Создаем ссылку для скачивания
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        
+        // Добавляем ссылку в DOM, кликаем по ней и удаляем
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Освобождаем память
+        window.URL.revokeObjectURL(url);
+        
+        console.log('Файл успешно скачан:', filename);
+    }
+
+    // Получение конфигурации с сервера
+    async fetchConfig() {
+        const response = await fetch('/api/suggestions/config');
+        if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
+        return await response.json();
+    }
+
+    // Заполнение таблицы параметров БД
+    async populateDbParamsTable() {
+        this.dbParamsBody.innerHTML = '';
+        try {
+            const dbParams = await this.fetchConfig();
+    
+            dbParams.forEach(param => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${param.name}</strong></td>
+                    <td><code>${param.parameter}</code></td>
+                    <td><span class="recommended-cold">${param.recommended_parameter_cold}</span></td>
+                    <td><span class="recommended-hot">${param.recommended_parameter_hot}</span></td>
+                    <td>${param.description}</td>
+                `;
+                this.dbParamsBody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error('Ошибка при загрузке конфигурации:', e);
+            this.dbParamsBody.innerHTML = `<tr><td colspan="5">Ошибка загрузки параметров</td></tr>`;
+            //сюда можно пиздануть моки для прикола)))
+        }
+    }
+
+    // Мок данные для параметров PostgreSQL
+    getDbParamsData() {
+        return [
+            {
+                name: 'shared_buffers',
+                value: '128MB',
+                recommendedCold: '256MB',
+                recommendedHot: '1GB',
+                description: 'Размер общей памяти для буферов PostgreSQL'
+            },
+            {
+                name: 'effective_cache_size',
+                value: '4GB',
+                recommendedCold: '8GB',
+                recommendedHot: '16GB',
+                description: 'Оценка доступной памяти для кэширования'
+            },
+            {
+                name: 'work_mem',
+                value: '4MB',
+                recommendedCold: '8MB',
+                recommendedHot: '16MB',
+                description: 'Память для операций сортировки и хеширования'
+            },
+            {
+                name: 'maintenance_work_mem',
+                value: '64MB',
+                recommendedCold: '128MB',
+                recommendedHot: '256MB',
+                description: 'Память для операций обслуживания БД'
+            },
+            {
+                name: 'checkpoint_completion_target',
+                value: '0.5',
+                recommendedCold: '0.7',
+                recommendedHot: '0.9',
+                description: 'Целевое время завершения контрольных точек'
+            },
+            {
+                name: 'wal_buffers',
+                value: '16MB',
+                recommendedCold: '32MB',
+                recommendedHot: '64MB',
+                description: 'Размер буферов WAL (Write-Ahead Log)'
+            },
+            {
+                name: 'default_statistics_target',
+                value: '100',
+                recommendedCold: '200',
+                recommendedHot: '500',
+                description: 'Целевое количество строк для статистики'
+            },
+            {
+                name: 'random_page_cost',
+                value: '4.0',
+                recommendedCold: '3.0',
+                recommendedHot: '1.1',
+                description: 'Стоимость случайного доступа к странице'
+            },
+            {
+                name: 'effective_io_concurrency',
+                value: '1',
+                recommendedCold: '2',
+                recommendedHot: '4',
+                description: 'Количество одновременных операций ввода-вывода'
+            },
+            {
+                name: 'max_worker_processes',
+                value: '8',
+                recommendedCold: '16',
+                recommendedHot: '32',
+                description: 'Максимальное количество рабочих процессов'
+            }
+        ];
+    }
+}
+
+// Инициализация приложения при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    new SQLAnalyzer();
+});
+
+// Дополнительные утилиты для работы с формой
+document.addEventListener('DOMContentLoaded', () => {
+    // Автоматическое изменение размера textarea при вводе
+    const textarea = document.getElementById('sqlQuery');
+    
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 300) + 'px';
+    });
+
+    // Валидация SQL-запроса (базовая)
+    textarea.addEventListener('blur', function() {
+        const query = this.value.trim();
+        if (query && !query.toLowerCase().includes('select')) {
+            this.style.borderColor = '#dc3545';
+        } else {
+            this.style.borderColor = '#dee2e6';
+        }
+    });
+});

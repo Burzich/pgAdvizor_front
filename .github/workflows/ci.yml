@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_deploy_to_staging:
+    name: Build and deploy
+    runs-on: self-hosted
+    timeout-minutes: 30
+    env:
+      IMAGE_NAME: "front_pg"
+      TAG: "latest"
+      CONTAINER_NAME: "front"
+      PORT: "80"
+      DOCKER_NETWORK: "pg_network"
+    steps:
+      - name: Check for actual
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: >
+          docker build
+          -t ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          --no-cache
+          .
+
+      - name: Stop previous
+        run: >
+          CONTAINER_EXISTS=$(docker ps -a --format '{{.Names}}' --filter "name=${{ env.CONTAINER_NAME }}" -a | wc -w);
+          if  [[ $CONTAINER_EXISTS != 0 ]] ;
+          then docker container stop ${{ env.CONTAINER_NAME }};
+          docker container rm ${{ env.CONTAINER_NAME }};
+          else echo "Container ${{ env.CONTAINER_NAME }} does not exist";
+          fi
+
+      - name: Run container
+        run: >
+          docker run
+          --restart unless-stopped
+          --name ${{ env.CONTAINER_NAME }}
+          --network ${{ env.DOCKER_NETWORK }}
+          -p ${{ env.PORT }}:${{ env.PORT }}
+          -d
+          --env PORT=:${{ env.PORT }}
+          ${{ env.IMAGE_NAME }}:${{ env.TAG }}
+
+      - name: Perform cleanup
+        if: always()
+        run: docker system prune -f

@@ -460,7 +460,7 @@ class SQLAnalyzer {
 
     // Получение конфигурации с сервера
     async fetchConfig() {
-        const response = await fetch('/api/suggestions/config');
+        const response = await fetch('${API_BASE_URL}/api/suggestions/config');
         if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
         return await response.json();
     }

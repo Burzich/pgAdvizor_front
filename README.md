@@ -29,4 +29,4 @@ sql_anal/
 ```
 
 ПЕРЕМЕННЫЕ
-    API_BASE_URL = 'хуйня до /api'
+    API_BASE_URL = 'всё что до /api'

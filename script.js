@@ -201,76 +201,6 @@ class SQLAnalyzer {
         this.resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Показ результатов выбранных анализаторов
-    showAnalyzerResults(analyzers) {
-        const staticResults = document.getElementById('staticResults');
-        const llmResults = document.getElementById('llmResults');
-        
-        // Показываем результаты STATIC анализа
-        if (analyzers.analyzer1) {
-            staticResults.style.display = 'block';
-            this.populateStaticResults();
-        } else {
-            staticResults.style.display = 'none';
-        }
-        
-        // Показываем результаты LLM анализа
-        if (analyzers.analyzer2) {
-            llmResults.style.display = 'block';
-            this.populateLLMResults();
-        } else {
-            llmResults.style.display = 'none';
-        }
-    }
-
-    // Заполнение результатов STATIC анализа
-    populateStaticResults() {
-        const staticContent = document.querySelector('.static-content');
-        const staticResults = this.getStaticAnalysisResults();
-        
-        staticContent.innerHTML = '';
-        staticResults.forEach(result => {
-            const p = document.createElement('p');
-            p.textContent = result;
-            staticContent.appendChild(p);
-        });
-    }
-
-    // Заполнение результатов LLM анализа
-    populateLLMResults() {
-        const llmContent = document.querySelector('.llm-content');
-        const llmResults = this.getLLMAnalysisResults();
-        
-        llmContent.innerHTML = '';
-        llmResults.forEach(result => {
-            const p = document.createElement('p');
-            p.textContent = result;
-            llmContent.appendChild(p);
-        });
-    }
-
-    // Мок данные для STATIC анализа
-    getStaticAnalysisResults() {
-        return [
-            'Я того рот ебал эти запросы',
-            'Просто нахуй',
-            'Большую хуйню надо было постараться сделать',
-            'Знаешь что такое HAVING BY???',
-            'fkljdfjk;ldfjk;f'
-        ];
-    }
-
-    // Мок данные для LLM анализа
-    getLLMAnalysisResults() {
-        return [
-            'Ты прав, запрос хуйня. Но не переживай что сделал хуйню',
-            'Ща всё исправим',
-            'Пиши заявление на увольнение',
-            'Это всё явно не твоё',
-            'Но всё равно не переживай, я тебя заменю'
-        ];
-    }
-
     // Заполнение таблицы данными
     populateTable() {
         this.tableBody.innerHTML = '';
@@ -300,11 +230,6 @@ class SQLAnalyzer {
             { id: 3, name: 'Алексей Сидоров', email: 'alexey@example.com', status: 'active' },
             { id: 4, name: 'Елена Козлова', email: 'elena@example.com', status: 'pending' }
         ];
-    }
-
-    // Утилита для создания задержки
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // ЗАГОТОВКА: Отправка данных на сервер
@@ -342,16 +267,6 @@ class SQLAnalyzer {
             throw error;
         }
     }
-
-    // ЗАГОТОВКА: Обработка ответа от сервера
-    // handleServerResponse(serverData) {
-    //     // Здесь будет логика обработки реального ответа от сервера
-    //     // Например:
-    //     // - Отображение результатов анализа
-    //     // - Показ ошибок SQL
-    //     // - Отображение рекомендаций по оптимизации
-    //     // - Показ статистики запроса
-    // }
 
     // Открытие модального окна с параметрами БД
     openDbModal() {
@@ -412,9 +327,11 @@ class SQLAnalyzer {
         if (analyzer1Enabled) {
             content += 'STATIC:\n';
             content += '---------------------------\n';
-            const staticResults = this.getStaticAnalysisResults();
+            // Используем последние полученные результаты анализа, а не моки
+            const staticContent = document.querySelector('.static-content');
+            const staticResults = Array.from(staticContent.querySelectorAll('p')).map(p => p.textContent);
             staticResults.forEach(result => {
-                content += '• ' + result + '\n';
+            content += '• ' + result + '\n';
             });
             content += '\n';
         }
@@ -423,9 +340,10 @@ class SQLAnalyzer {
         if (analyzer2Enabled) {
             content += 'LLM:\n';
             content += '------------------------\n';
-            const llmResults = this.getLLMAnalysisResults();
+            const llmContent = document.querySelector('.llm-content');
+            const llmResults = Array.from(llmContent.querySelectorAll('p')).map(p => p.textContent);
             llmResults.forEach(result => {
-                content += '• ' + result + '\n';
+            content += '• ' + result + '\n';
             });
             content += '\n';
         }
@@ -485,84 +403,7 @@ class SQLAnalyzer {
         } catch (e) {
             console.error('Ошибка при загрузке конфигурации:', e);
             this.dbParamsBody.innerHTML = `<tr><td colspan="5">Ошибка загрузки параметров</td></tr>`;
-            //сюда можно пиздануть моки для прикола)))
         }
-    }
-
-    // Мок данные для параметров PostgreSQL
-    getDbParamsData() {
-        return [
-            {
-                name: 'shared_buffers',
-                value: '128MB',
-                recommendedCold: '256MB',
-                recommendedHot: '1GB',
-                description: 'Размер общей памяти для буферов PostgreSQL'
-            },
-            {
-                name: 'effective_cache_size',
-                value: '4GB',
-                recommendedCold: '8GB',
-                recommendedHot: '16GB',
-                description: 'Оценка доступной памяти для кэширования'
-            },
-            {
-                name: 'work_mem',
-                value: '4MB',
-                recommendedCold: '8MB',
-                recommendedHot: '16MB',
-                description: 'Память для операций сортировки и хеширования'
-            },
-            {
-                name: 'maintenance_work_mem',
-                value: '64MB',
-                recommendedCold: '128MB',
-                recommendedHot: '256MB',
-                description: 'Память для операций обслуживания БД'
-            },
-            {
-                name: 'checkpoint_completion_target',
-                value: '0.5',
-                recommendedCold: '0.7',
-                recommendedHot: '0.9',
-                description: 'Целевое время завершения контрольных точек'
-            },
-            {
-                name: 'wal_buffers',
-                value: '16MB',
-                recommendedCold: '32MB',
-                recommendedHot: '64MB',
-                description: 'Размер буферов WAL (Write-Ahead Log)'
-            },
-            {
-                name: 'default_statistics_target',
-                value: '100',
-                recommendedCold: '200',
-                recommendedHot: '500',
-                description: 'Целевое количество строк для статистики'
-            },
-            {
-                name: 'random_page_cost',
-                value: '4.0',
-                recommendedCold: '3.0',
-                recommendedHot: '1.1',
-                description: 'Стоимость случайного доступа к странице'
-            },
-            {
-                name: 'effective_io_concurrency',
-                value: '1',
-                recommendedCold: '2',
-                recommendedHot: '4',
-                description: 'Количество одновременных операций ввода-вывода'
-            },
-            {
-                name: 'max_worker_processes',
-                value: '8',
-                recommendedCold: '16',
-                recommendedHot: '32',
-                description: 'Максимальное количество рабочих процессов'
-            }
-        ];
     }
 }
 

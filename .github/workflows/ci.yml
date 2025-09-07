@@ -14,6 +14,7 @@ jobs:
       CONTAINER_NAME: "front"
       PORT: "80"
       DOCKER_NETWORK: "pg_network"
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
     steps:
       - name: Check for actual
         uses: actions/checkout@v4
@@ -43,6 +44,7 @@ jobs:
           -p ${{ env.PORT }}:${{ env.PORT }}
           -d
           --env PORT=:${{ env.PORT }}
+          --env API_BASE_URL=${{ env.API_BASE_URL }}
           ${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
       - name: Perform cleanup

@@ -23,7 +23,7 @@
                     <button class="header-button db-button" id="dbButton" title="Параметры БД">
                         <i class="bi bi-database"></i>
                     </button>
-                    <button class="header-button download-button" id="downloadButton" title="Скачать">
+                    <button class="header-button download-button" id="downloadButton" title="Скачать результаты анализа">
                         <i class="bi bi-download"></i>
                     </button>
                 </div>
@@ -40,7 +40,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-container">
+                    <div class="table-container scroll-drag-x">
                         <table id="dbParamsTable">
                             <thead>
                                 <tr>
@@ -70,7 +70,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-container">
+                    <div class="table-container scroll-drag-x">
                         <table id="historyTable">
                             <thead>
                                 <tr>
@@ -101,7 +101,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="table-container">
+                    <div class="table-container scroll-drag-x">
                         <table id="activeTable">
                             <thead>
                                 <tr>
@@ -193,7 +193,6 @@
     
     <script>
         window.API_BASE_URL = "${API_BASE_URL}";
-        window.API_BASE_URL = "http://45.145.190.61:8080";
     </script>
     <script src="script.js"></script>
 </body>

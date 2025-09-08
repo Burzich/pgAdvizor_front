@@ -63,3 +63,11 @@ tbody tr:hover {
     color: #000;
     font-size: 14px;
 }
+
+.scroll-drag-x.dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+.scroll-drag-x {
+    cursor: grab;
+}

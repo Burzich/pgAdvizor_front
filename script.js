@@ -432,3 +432,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Горизонтальный drag-scroll для всех .scroll-drag-x
+    document.querySelectorAll('.scroll-drag-x').forEach(container => {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        container.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Только ЛКМ
+            isDown = true;
+            container.classList.add('dragging');
+            startX = e.pageX - container.offsetLeft;
+            scrollLeft = container.scrollLeft;
+            e.preventDefault();
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('dragging');
+        });
+
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('dragging');
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            const x = e.pageX - container.offsetLeft;
+            const walk = (x - startX) * -1; // -1 чтобы направление было привычным
+            container.scrollLeft = scrollLeft + walk;
+        });
+    });
+});

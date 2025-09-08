@@ -5,7 +5,6 @@ class SQLAnalyzer {
     constructor() {
         this.initializeElements();
         this.bindEvents();
-        this.mockData = this.getMockData();
     }
 
     // Инициализация DOM элементов
@@ -14,15 +13,9 @@ class SQLAnalyzer {
         this.checkButton = document.getElementById('checkButton');
         this.analyzer1 = document.getElementById('analyzer1');
         this.analyzer2 = document.getElementById('analyzer2');
-        this.option1 = document.getElementById('option1')
         this.resultsSection = document.getElementById('resultsSection');
-        this.databaseSection = document.getElementById('databaseSection');
         this.queryDisplay = document.getElementById('queryDisplay');
         this.analyzersDisplay = document.getElementById('analyzersDisplay');
-        this.tableBody = document.getElementById('tableBody');
-        this.tableFooter = document.getElementById('tableFooter');
-        this.collapseButton = document.getElementById('collapseButton');
-        this.databaseContent = document.getElementById('databaseContent');
         
         // Новые элементы для заголовка и модального окна
         this.dbButton = document.getElementById('dbButton');
@@ -39,7 +32,6 @@ class SQLAnalyzer {
     // Привязка событий
     bindEvents() {
         this.checkButton.addEventListener('click', () => this.handleCheck());
-        this.collapseButton.addEventListener('click', () => this.toggleDatabaseSection());
         
         // Новые события для кнопок заголовка
         this.dbButton.addEventListener('click', () => this.openDbModal());
@@ -52,20 +44,6 @@ class SQLAnalyzer {
                 this.closeDbModal();
             }
         });
-    }
-
-    // Переключение сворачивания/разворачивания секции БД
-    toggleDatabaseSection() {
-        const content = this.databaseContent;
-        const arrowIcon = this.collapseButton.querySelector('.arrow-icon');
-        
-        if (content.classList.contains('expanded')) {
-            content.classList.remove('expanded');
-            arrowIcon.classList.add('collapsed');
-        } else {
-            content.classList.add('expanded');
-            arrowIcon.classList.remove('collapsed');
-        }
     }
 
     // Обработка изменения галочек анализаторов
@@ -91,29 +69,11 @@ class SQLAnalyzer {
         if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
         return await response.json();
     }
-
-
-    // Отображение ответа базы данных
-    showDatabaseResponse() {
-        // Показываем секцию с ответом базы
-        this.databaseSection.style.display = 'block';
-        
-        // По умолчанию секция свернута
-        this.databaseContent.classList.remove('collapsed');
-        this.collapseButton.querySelector('.arrow-icon').classList.add('collapsed');
-        
-        // Заполняем таблицу данными
-        this.populateTable();
-        
-        // Прокручиваем к таблице
-        this.databaseSection.scrollIntoView({ behavior: 'smooth' });
-    }
     
     // Обработка нажатия кнопки "Проверить"
     async handleCheck() {
         try {
             // Вырубаем всё
-            this.databaseSection.style.display = 'none';
             this.resultsSection.style.display = 'none';
 
             // Показываем индикатор загрузки
@@ -126,14 +86,6 @@ class SQLAnalyzer {
             // Получаем результаты анализа с сервера
             const suggestions = await this.fetchQuerySuggestions(formData.sqlQuery);
             this.showResults(formData, suggestions);
-            
-            // Показываем ответ базы данных
-            if (formData.options.option1) {
-                this.showDatabaseResponse();
-            }
-            
-            // В реальном приложении здесь будет отправка POST-запроса на сервер
-            // await this.sendToServer(formData);
             
         } catch (error) {
             console.error('Ошибка при проверке:', error);
@@ -152,9 +104,6 @@ class SQLAnalyzer {
             analyzers: {
                 analyzer1: this.analyzer1.checked,
                 analyzer2: this.analyzer2.checked
-            },
-            options: {
-                option1: this.option1.checked
             }
         };
     }
@@ -199,73 +148,6 @@ class SQLAnalyzer {
         });
     
         this.resultsSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // Заполнение таблицы данными
-    populateTable() {
-        this.tableBody.innerHTML = '';
-        
-        this.mockData.forEach(row => {
-            const tr = document.createElement('tr');
-            
-            tr.innerHTML = `
-                <td>${row.id}</td>
-                <td>${row.name}</td>
-                <td>${row.email}</td>
-                <td><span class="status-badge status-${row.status}">${row.status}</span></td>
-            `;
-            
-            this.tableBody.appendChild(tr);
-        });
-        
-        // Обновляем футер таблицы
-        this.tableFooter.textContent = `Найдено записей: ${this.mockData.length}`;
-    }
-
-    // Мок-данные для демонстрации
-    getMockData() {
-        return [
-            { id: 1, name: 'Иван Иванов', email: 'ivan@example.com', status: 'active' },
-            { id: 2, name: 'Мария Петрова', email: 'maria@example.com', status: 'inactive' },
-            { id: 3, name: 'Алексей Сидоров', email: 'alexey@example.com', status: 'active' },
-            { id: 4, name: 'Елена Козлова', email: 'elena@example.com', status: 'pending' }
-        ];
-    }
-
-    // ЗАГОТОВКА: Отправка данных на сервер
-    // В реальном приложении этот метод будет отправлять POST-запрос на сервер
-    async sendToServer(formData) {
-        try {
-            // Пример структуры запроса к серверу
-            const response = await fetch(`${API_BASE_URL}/api/analyze-sql`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Добавьте заголовки авторизации если необходимо
-                    // 'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({
-                    sqlQuery: formData.sqlQuery,
-                    analyzers: formData.analyzers,
-                    timestamp: new Date().toISOString()
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            
-            // Обработка ответа от сервера
-            // this.handleServerResponse(result);
-            
-            return result;
-            
-        } catch (error) {
-            console.error('Ошибка при отправке на сервер:', error);
-            throw error;
-        }
     }
 
     // Открытие модального окна с параметрами БД

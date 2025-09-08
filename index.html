@@ -14,6 +14,12 @@
             <div class="header-content">
                 <h1>pgAdvisor</h1>
                 <div class="header-buttons">
+                    <button class="header-button db-button" id="activeButton" title="Активные запросы">
+                        <i class="bi bi-activity"></i>
+                    </button>
+                    <button class="header-button db-button" id="historyButton" title="История запросов">
+                        <i class="bi bi-journal-text"></i>
+                    </button>
                     <button class="header-button db-button" id="dbButton" title="Параметры БД">
                         <i class="bi bi-database"></i>
                     </button>
@@ -46,6 +52,73 @@
                                 </tr>
                             </thead>
                             <tbody id="dbParamsBody">
+                                <!-- Данные будут добавлены через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно с историей -->
+        <div id="historyModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>История запросов</h2>
+                    <button class="modal-close" id="historyModalClose">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>SQL-запрос</th>
+                                    <th>Выполнений</th>
+                                    <th>Суммарное время (мс)</th>
+                                    <th>Среднее время (мс)</th>
+                                    <th>Строк</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Данные будут добавлены через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно с активными запросами -->
+        <div id="activeModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Активные подключения</h2>
+                    <button class="modal-close" id="activeModalClose">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table id="activeTable">
+                            <thead>
+                                <tr>
+                                    <th>PID</th>
+                                    <th>Пользователь</th>
+                                    <th>БД</th>
+                                    <th>Приложение</th>
+                                    <th>IP клиента</th>
+                                    <th>Старт backend</th>
+                                    <th>Старт запроса</th>
+                                    <th>Статус</th>
+                                    <th>SQL-запрос</th>
+                                    <th>Тип ожидания</th>
+                                    <th>Событие ожидания</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeTableBody">
                                 <!-- Данные будут добавлены через JavaScript -->
                             </tbody>
                         </table>
@@ -120,6 +193,7 @@
     
     <script>
         window.API_BASE_URL = "${API_BASE_URL}";
+        window.API_BASE_URL = "http://45.145.190.61:8080";
     </script>
     <script src="script.js"></script>
 </body>

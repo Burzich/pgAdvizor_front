@@ -17,7 +17,19 @@ class SQLAnalyzer {
         this.queryDisplay = document.getElementById('queryDisplay');
         this.analyzersDisplay = document.getElementById('analyzersDisplay');
         
-        // Новые элементы для заголовка и модального окна
+        // Элементы для заголовка и модального окна
+        this.activeButton = document.getElementById('activeButton');
+        this.activeModal = document.getElementById('activeModal');
+        this.activeModalClose = document.getElementById('activeModalClose');
+        this.activeTableBody = document.getElementById('activeTableBody');
+        
+        // history modal
+        this.historyButton = document.getElementById('historyButton');
+        this.historyModal = document.getElementById('historyModal');
+        this.historyModalClose = document.getElementById('historyModalClose');
+        this.historyTableBody = document.getElementById('historyTableBody');
+
+        // db modal
         this.dbButton = document.getElementById('dbButton');
         this.downloadButton = document.getElementById('downloadButton');
         this.dbModal = document.getElementById('dbModal');
@@ -34,16 +46,122 @@ class SQLAnalyzer {
         this.checkButton.addEventListener('click', () => this.handleCheck());
         
         // Новые события для кнопок заголовка
+        this.activeButton.addEventListener('click', () => this.openActiveModal());
+    this.activeModalClose.addEventListener('click', () => this.closeActiveModal());
+
+        this.historyButton.addEventListener('click', () => this.openHistoryModal());
+        this.historyModalClose.addEventListener('click', () => this.closeHistoryModal());
+
         this.dbButton.addEventListener('click', () => this.openDbModal());
         this.modalClose.addEventListener('click', () => this.closeDbModal());
+
         this.downloadButton.addEventListener('click', () => this.handleDownload());
         
         // Закрытие модального окна при клике вне его
         window.addEventListener('click', (event) => {
+            if (event.target === this.activeModal) {
+                this.closeActiveModal();
+            }
+            if (event.target === this.historyModal) {
+                this.closeHistoryModal();
+            }
             if (event.target === this.dbModal) {
                 this.closeDbModal();
             }
         });
+    }
+
+    // Открытие модального окна с активными подключениями
+    openActiveModal() {
+        this.activeModal.style.display = 'block';
+        this.populateActiveTable();
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeActiveModal() {
+        this.activeModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    async fetchActive() {
+        const response = await fetch(`${API_BASE_URL}/api/queries/active`);
+        if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
+        return await response.json();
+    }
+
+    async populateActiveTable() {
+        this.activeTableBody.innerHTML = '';
+        try {
+            const activeList = await this.fetchActive();
+            if (!Array.isArray(activeList) || activeList.length === 0) {
+                this.activeTableBody.innerHTML = `<tr><td colspan="11">Нет данных</td></tr>`;
+                return;
+            }
+            activeList.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.pid}</td>
+                    <td>${item.username}</td>
+                    <td>${item.database}</td>
+                    <td>${item.application_name}</td>
+                    <td>${item.client_addr}</td>
+                    <td>${item.backend_start}</td>
+                    <td>${item.query_start}</td>
+                    <td>${item.state}</td>
+                    <td style="max-width:350px;overflow-x:auto;"><code>${item.query}</code></td>
+                    <td>${item.wait_event_type || ''}</td>
+                    <td>${item.wait_event || ''}</td>
+                `;
+                this.activeTableBody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error('Ошибка при загрузке активных подключений:', e);
+            this.activeTableBody.innerHTML = `<tr><td colspan="11">Ошибка загрузки данных</td></tr>`;
+        }
+    }
+
+    // Открытие модального окна с историей запросов
+    openHistoryModal() {
+        this.historyModal.style.display = 'block';
+        this.populateHistoryTable();
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeHistoryModal() {
+        this.historyModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    async fetchHistory() {
+        const response = await fetch(`${API_BASE_URL}/api/queries/history`);
+        if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
+        return await response.json();
+    }
+
+    async populateHistoryTable() {
+        this.historyTableBody.innerHTML = '';
+        try {
+            const history = await this.fetchHistory();
+            if (!Array.isArray(history) || history.length === 0) {
+                this.historyTableBody.innerHTML = `<tr><td colspan="6">Нет данных</td></tr>`;
+                return;
+            }
+            history.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><code>${item.query_id}</code></td>
+                    <td style="max-width:350px;overflow-x:auto;"><code>${item.query}</code></td>
+                    <td>${item.calls}</td>
+                    <td>${item.total_exec_time}</td>
+                    <td>${item.mean_exec_time}</td>
+                    <td>${item.rows}</td>
+                `;
+                this.historyTableBody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error('Ошибка при загрузке истории:', e);
+            this.historyTableBody.innerHTML = `<tr><td colspan="6">Ошибка загрузки истории</td></tr>`;
+        }
     }
 
     // Обработка изменения галочек анализаторов

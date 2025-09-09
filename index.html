@@ -164,6 +164,16 @@
                     <div class="analyzers-display" id="analyzersDisplay"></div>
                 </div>
 
+                <!-- Простой анализ -->
+                <div id="simpleResults" class="analyzer-results" style="display: none;">
+                    <h3>Общий анализ</h3>
+                    <div class="simple-content">
+                        <p>Анализ времени выполнения SQL запроса...</p>
+                        <p>Общая стоимость...</p>
+                        <p>Ы...</p>
+                    </div>
+                </div>
+
                 <!-- Результаты STATIC анализа -->
                 <div id="staticResults" class="analyzer-results" style="display: none;">
                     <h3>STATIC</h3>
@@ -193,6 +203,7 @@
     
     <script>
         window.API_BASE_URL = "${API_BASE_URL}";
+        window.API_BASE_URL = "http://45.145.190.61:8080";
     </script>
     <script src="script.js"></script>
 </body>

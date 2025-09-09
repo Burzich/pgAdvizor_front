@@ -202,8 +202,8 @@ class SQLAnalyzer {
             const formData = this.getFormData();
 
             // Получаем результаты анализа с сервера
-            const suggestions = await this.fetchQuerySuggestions(formData.sqlQuery);
-            this.showResults(formData, suggestions);
+            const analysisResult = await this.fetchQuerySuggestions(formData.sqlQuery);
+            this.showResults(formData, analysisResult);
             
         } catch (error) {
             console.error('Ошибка при проверке:', error);
@@ -227,12 +227,12 @@ class SQLAnalyzer {
     }
 
     // Отображение результатов анализа
-    showResults(formData, suggestions) {
+    showResults(formData, analysisResult) {
         this.resultsSection.style.display = 'block';
-    
+
         this.queryDisplay.textContent = formData.sqlQuery || 'Запрос не введен';
         this.analyzersDisplay.innerHTML = '';
-    
+
         // Теги анализаторов
         Object.entries(formData.analyzers).forEach(([key, enabled]) => {
             if (enabled) {
@@ -243,28 +243,53 @@ class SQLAnalyzer {
                 this.analyzersDisplay.appendChild(tag);
             }
         });
-    
-        // STATIC/LLM выводим на основе ответа сервера
+
+        const analyzer1Enabled = this.analyzer1.checked;
+        const analyzer2Enabled = this.analyzer2.checked;
+
         const staticResults = document.getElementById('staticResults');
         const llmResults = document.getElementById('llmResults');
         const staticContent = document.querySelector('.static-content');
         const llmContent = document.querySelector('.llm-content');
-    
+        const simpleResults = document.getElementById('simpleResults');
+        const simpleContent = document.querySelector('.simple-content');
+
         staticContent.innerHTML = '';
         llmContent.innerHTML = '';
-    
-        suggestions.forEach(s => {
-            const p = document.createElement('p');
-            p.textContent = `[${s.severity}] ${s.message} (${s.fix})`;
-            if (s.source === 'static-analyzer') {
-                staticResults.style.display = 'block';
+        simpleContent.innerHTML = '';
+
+        // Простые метрики
+        // metaInfo
+        if (typeof analysisResult.total_cost === 'number') {
+            const metaP1 = document.createElement('p');
+            metaP1.textContent = `Оценочная стоимость запроса: ${analysisResult.total_cost}`;
+            simpleContent.appendChild(metaP1);
+        }
+        if (typeof analysisResult.estimated_time === 'number') {
+            const metaP2 = document.createElement('p');
+            metaP2.textContent = `Оценочное время выполнения: ${analysisResult.estimated_time} сек.`;
+            simpleContent.appendChild(metaP2);
+        }
+
+        staticResults.style.display = analyzer1Enabled ? 'block' : 'none';
+        llmResults.style.display = analyzer2Enabled ? 'block' : 'none';
+        simpleResults.style.display = 'block'; // Всегда показываем простой анализ
+
+        // Разделение результатов по анализаторам
+
+        (analysisResult.suggestions || []).forEach(s => {
+            if (s.source === 'static-analyzer' && analyzer1Enabled) {
+                const p = document.createElement('p');
+                p.textContent = `[${s.severity}] ${s.message} (${s.fix})`;
                 staticContent.appendChild(p);
-            } else {
-                llmResults.style.display = 'block';
+            }
+            if (s.source !== 'static-analyzer' && analyzer2Enabled) {
+                const p = document.createElement('p');
+                p.textContent = `[${s.severity}] ${s.message} (${s.fix})`;
                 llmContent.appendChild(p);
             }
         });
-    
+
         this.resultsSection.scrollIntoView({ behavior: 'smooth' });
     }
 
